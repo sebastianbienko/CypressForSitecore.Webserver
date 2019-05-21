@@ -8,6 +8,8 @@ This is a simple node API to run cypress on Windows and to be used by Sitecore P
 As a starting point the more generic implementation by Dave Leigh has been used: https://github.com/daveaftershok/cypress-node-api-windows
 The implementation has been changed in a way to accept additional arguments for test execution to take renderings in account and have Sitecore control Cypress.
 
+It's supposed to be used alongside the [Cypress For Sitecore Module](https://github.com/sebastianbienko/CypressForSitecore)
+
 ## Usage
 
 ### Install:
