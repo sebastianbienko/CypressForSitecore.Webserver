@@ -13,11 +13,13 @@
     "cypress": "^3.1.0",
     "mocha": "^5.2.0",
     "mochawesome": "^3.1.1",
+    "mochawesome-merge": "^1.0.7",
     "mochawesome-report-generator": "^3.1.5"
   },
   "dependencies": {
     "body-parser": "^1.19.0",
     "express": "^4.16.4",
+    "glob": "^7.1.4",
     "moment": "^2.22.2"
   }
 }

@@ -3,8 +3,11 @@ const fs = require('fs');
 const app = express();
 var https = require('https');
 var http = require('http');
-var cypress = require('cypress')
-var bodyParser = require('body-parser')
+var cypress = require('cypress');
+var marge = require('mochawesome-report-generator');
+var { merge } = require('mochawesome-merge');
+var bodyParser = require('body-parser');
+const glob = require("glob");
 
 // Allow CORS - Remove if not needed.
 app.use(function(req, res, next) {
@@ -37,11 +40,25 @@ app.get('/report', (req, res) =>
 
 app.post('/run', async function (req, res){
 	
-	await cypress.run(req.body).then((results) => {
-		console.log(results);
-	}).catch((err) => {
-		console.log(err);
-	})
+	glob("mochawesome-report/*.json", function(er, files) {
+		for (const file of files){
+			fs.unlink(file, function(err) {
+				if (err){
+					console.error(err);
+				}
+			});
+		}
+	});
+
+	await cypress.run(req.body).then(
+		() => {
+			generateReport();
+		},
+		error => {
+			generateReport();
+			console.error(error);
+		}
+	);
 
 	res.json({
 		"isRunning": isRunning,
@@ -75,7 +92,11 @@ var options = {
 }
 
 http.createServer(app).listen(3000);
-console.log(`listening on port ${port}!`);
+console.log(`listening on port 3000!`);
 
 https.createServer(options, app).listen(3333);
 console.log(`listening on port 3333!`);
+
+function generateReport(options){
+	return merge(options).then(report => marge.create(report, options));
+}
