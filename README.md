@@ -42,26 +42,20 @@ Depending wether you are relying on the cypress.json file for configuration or n
 
 ### Endpoints:
 
-#### /
+#### / (Get)
 
  *shows current test run status*
 
-#### /run
+#### /run (Post)
 *runs tests*
 
-Cypress parameters can be passed as URL Query parameters. The parameter keys are required to be unique, but will not be passed itself. Here an example:
+Cypress parameters can be passed as JSON in the body of the request. The request body is not allowed to contain anything else. The expected JSON follows the same rules as the Cypress Module API does (see here: https://docs.cypress.io/guides/guides/module-api.html#cypress-run )
 
-```http
-http://localhost:3000/Run?1=--config baseUrl=http://habitathome.dev.local/,video=false,testFiles=**.spec.js,blacklistHosts=''["www.google-analstics.com","*.google-analytics.com","*google-analytics.com"]''&2=--reporter mochawesome&3=--record false
-```
-
-Note: *It was implemented this way to make passing the same cypress parameter multiple times possible. It hasn't been used in the end and might change in future.*
-
-#### /results
+#### /results (Get)
 
 *shows results of last test run add ?v=true for verbose output.*
 
-#### /report
+#### /report (Get)
 *Shows the latest test report courtesy of mocha-awesome: https://github.com/adamgruber/mochawesome*
 
 ### Sitecore
@@ -138,10 +132,21 @@ context('Feature.PageContent', () => {
 
 A rendering is defined by a "name" and a "datasource" property. The "datasource" property is optional and can be used to have the test run run only for a specific combination of rendering and datasource.
 
-The rendering definitions should be passed to Cypress in the '--env' parameter. Here an example for use with the "/run" endpoint:
+The rendering definitions should be passed to Cypress in the '--env' parameter. The Module API is used to run Cypress, which natively accepts Cypress configuration as JSON object. (Have a look here: https://docs.cypress.io/guides/guides/module-api.html#cypress-run) The configuration can be passed in the body of the "POST" request to the '/run' endpoint and will be used to run Cypress. The following structure is used for passing page rendering informations:
 
-```http
-http://localhost:3000/Run?0=--env ''pageRenderings=[{\"RenderingItemName\":\"Snippet\",\"HelixLayer\":2,\"HelixModule\":\"Experience-Accelerator\",\"Datasource\":\"{874ED455-AF6F-438D-BEA8-1916B7FAB5BD}\"},{\"RenderingItemName\":\"Promo\",\"HelixLayer\":2,\"HelixModule\":\"Experience-Accelerator\",\"Datasource\":\"\"},{\"RenderingItemName\":\"Promo\",\"HelixLayer\":2,\"HelixModule\":\"Experience-Accelerator\",\"Datasource\":\"\"},{\"RenderingItemName\":\"Promo\",\"HelixLayer\":2,\"HelixModule\":\"Experience-Accelerator\",\"Datasource\":\"\"},{\"RenderingItemName\":\"Container\",\"HelixLayer\":2,\"HelixModule\":\"Experience-Accelerator\",\"Datasource\":\"\"},{\"RenderingItemName\":\"Promo\",\"HelixLayer\":2,\"HelixModule\":\"Experience-Accelerator\",\"Datasource\":\"\"},{\"RenderingItemName\":\"Container\",\"HelixLayer\":2,\"HelixModule\":\"Experience-Accelerator\",\"Datasource\":\"\"},{\"RenderingItemName\":\"Container\",\"HelixLayer\":2,\"HelixModule\":\"Experience-Accelerator\",\"Datasource\":\"\"}]''&1=--config baseUrl=http://habitathome.dev.local/,video=false,testFiles=**.spec.js
+```json
+{
+  "env":{
+    "pageRenderings": [
+      {
+        "RenderingItemName": "",
+        "HelixLayer": 2, //1-3
+        "HelixModule": "",
+        "Datasource": ""
+      }
+    ]
+  }
+}
 ```
 
 This will be handled on Sitecore site by the Cypress module.

@@ -3,7 +3,8 @@ const fs = require('fs');
 const app = express();
 var https = require('https');
 var http = require('http');
-var {child_process, spawn} = require('child_process');
+var cypress = require('cypress')
+var bodyParser = require('body-parser')
 
 // Allow CORS - Remove if not needed.
 app.use(function(req, res, next) {
@@ -13,10 +14,13 @@ app.use(function(req, res, next) {
 });
 
 app.use(express.static('mochawesome-report'));
+app.use(bodyParser.json());
 
 let isRunning = false;
 let state = "IDLE"
 let lastStartTime = "";
+
+//Define "endpointss"
 
 app.get('/', (req, res) =>
 {
@@ -31,50 +35,21 @@ app.get('/report', (req, res) =>
     res.sendFile(__dirname + '/mochawesome-report/mochawesome.html');
 });
 
-app.get('/run', (req, res) => asyncTest(req, res));
-
-
-async function asyncTest(req, res){
-	var query = "";
-
-	Object.keys(req.query).forEach(function(key, index){
-		var value = req.query[key];
-		query = query + (value + " ");
+app.post('/run', async function (req, res){
+	
+	await cypress.run(req.body).then((results) => {
+		console.log(results);
+	}).catch((err) => {
+		console.log(err);
 	})
-
-	var find = "\"";
-	var re = new RegExp(find, 'g')
-
-	//query = query.replace(re, "\\\"");
-
-	var command = ".\\RunCypress.ps1 -options '" + query + "'";
-
-	child = spawn("powershell.exe",[command],
-		{ stdio: [process.stdin, process.stdout, process.stderr] });
-
-	await onExit(child);
 
 	res.json({
 		"isRunning": isRunning,
 		"state" : state,
 		"lastStartTime" : lastStartTime
 	});
-}
-
-function onExit(childProcess) {
-  return new Promise((resolve, reject) => {
-    childProcess.once('exit', (code, signal) => {
-      if (code === 0) {
-        resolve(undefined);
-      } else {
-        reject(new Error('Exit with error code: '+code));
-      }
-    });
-    childProcess.once('error', (err) => {
-      reject(err);
-    });
-  });
-}
+	
+});
 
 app.get('/results', (req, res) =>
 {
@@ -92,19 +67,15 @@ app.get('/results', (req, res) =>
 	verbose ? res.json(parsedData) : res.json(parsedData.stats);
 });
 
-let port = process.env.PORT || 3000;
-
-http.createServer(app).listen(3000);
-console.log(`listening on port ${port}!`);
+//Create Servers
 
 var options = {
 	key: fs.readFileSync('./key.pem', 'utf8'),
 	cert: fs.readFileSync('./server.crt', 'utf8')
 }
 
+http.createServer(app).listen(3000);
+console.log(`listening on port ${port}!`);
+
 https.createServer(options, app).listen(3333);
 console.log(`listening on port 3333!`);
-
-function urldecode(str) {
-	return decodeURIComponent((str+'').replace(/\+/g, '%20'));
-}
